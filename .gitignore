@@ -1,0 +1,14 @@
+# Byte-compiled / optimized Python files
+__pycache__/
+*.py[cod]
+
+# 3D Slicer module runtime artifacts (temporary files created during processing)
+PulpChamberOpenPlanning/TmpFiles*/
+
+# Trained model weights — released upon publication.
+# (Remove this line when you are ready to ship the weights with the repository.)
+*.pth
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
