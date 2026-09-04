@@ -4,7 +4,16 @@
 
 *Official 3D Slicer extension: `SlicerEndoPlanner`*
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![3D Slicer](https://img.shields.io/badge/3D%20Slicer-Extension-e96d1f.svg)](https://www.slicer.org/) [![Python](https://img.shields.io/badge/Python-3.9-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/) [![PyTorch](https://img.shields.io/badge/PyTorch-2.6-EE4C2C.svg?logo=pytorch&logoColor=white)](https://pytorch.org/) [![Paper](https://img.shields.io/badge/Paper-Under%20Review-b31b1b.svg)](https://www.sciencedirect.com/journal/medical-image-analysis)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![3D Slicer](https://img.shields.io/badge/3D%20Slicer-Extension-e96d1f.svg)](https://www.slicer.org/) [![Python](https://img.shields.io/badge/Python-3.9-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/) [![PyTorch](https://img.shields.io/badge/PyTorch-2.3.1-EE4C2C.svg?logo=pytorch&logoColor=white)](https://pytorch.org/) [![Paper](https://img.shields.io/badge/Paper-Medical%20Image%20Analysis-b31b1b.svg)](https://doi.org/10.1016/j.media.2026.104294)
+
+---
+
+## 📰 News
+
+- **2026-09-04:** Updated the repository with the current 3D Slicer module implementation.
+- **2026-09-04:** Released the trained model weights in [GitHub Releases](https://github.com/ZhyBrian/SlicerEndoPlanner/releases/tag/ModelWeights).
+- **2026-09-02:** Our paper became [available online in *Medical Image Analysis*](https://doi.org/10.1016/j.media.2026.104294).
+- **2026-08-26:** Our paper was accepted by *Medical Image Analysis*.
 
 ---
 
@@ -12,53 +21,66 @@
 
 [![EndoPlanner video demonstration](https://img.youtube.com/vi/VcDCuTpR4Zw/maxresdefault.jpg)](https://youtu.be/VcDCuTpR4Zw)
 
-▶️ **[Watch the full video demonstration on YouTube.](https://youtu.be/VcDCuTpR4Zw)** It follows the complete pipeline, from a single dental CBCT scan to a ready-to-print surgical template assembly, in a matter of minutes.
+▶️ **[Watch the full video demonstration on YouTube.](https://youtu.be/VcDCuTpR4Zw)**
+
+▶️ **[Watch the full video demonstration on Bilibili.](https://www.bilibili.com/video/BV1QCtB6vEjx/?vd_source=850b409ba93ba39cacbe6201c88d1871)**
+
+It follows the planning workflow from a dental CBCT scan to a surgical template assembly that can be exported for 3D printing.
 
 ---
 
 ## 📖 Introduction
 
-Root canal therapy is one of the most frequently performed dental procedures, yet the intricate variability of root canal anatomy makes it error-prone, especially for multi-rooted teeth. Guided Endodontics improves precision and predictability, but conventional preoperative planning relies on non-dedicated software and tedious manual annotation, which renders it labor-intensive, subjective, and largely confined to single-rooted teeth.
+Root canal therapy is a common dental procedure, but the variability of root canal anatomy makes access preparation challenging, especially in multi-rooted teeth. Guided Endodontics improves precision and predictability through patient-specific surgical templates. Conventional planning, however, requires extensive manual annotation and modeling in software that is not designed specifically for endodontics.
 
-**EndoPlanner** is an adaptive, integrated preoperative planning framework that generates clinically feasible surgical plans and templates for root canal therapy solely from oral CBCT scans, with only minimal manual intervention. It seamlessly integrates automated total dental segmentation, endodontic landmark detection, access cavity planning, and surgical template generation, and it is deployed here as the **`SlicerEndoPlanner`** extension for [3D Slicer](https://www.slicer.org/).
+**EndoPlanner** is an adaptive framework for preoperative root canal treatment planning using oral CBCT scans. It identifies root canal landmarks, uses their geometry to plan minimally invasive access paths, and generates a surgical template assembly. The workflow starts with automated dental segmentation and allows users to inspect and adjust the results at each stage. This repository provides the **`SlicerEndoPlanner`** extension for [3D Slicer](https://www.slicer.org/).
 
 > [!NOTE]
-> This repository accompanies our paper *"EndoPlanner: An adaptive planning framework for root canal therapy with graph-based endodontic landmark detection and inference-time refinement"*, currently **under review at *Medical Image Analysis***. The code published here is a **preview release**. The full implementation, including the trained model weights, **will be released upon publication.**
+> This repository accompanies our paper [*"EndoPlanner: An adaptive planning framework for root canal therapy with graph-based endodontic landmark detection and inference-time refinement"*](https://doi.org/10.1016/j.media.2026.104294), accepted by **Medical Image Analysis** and available online since **2 September 2026**. The 3D Slicer module code is included here, and the trained weights are available in [GitHub Releases](https://github.com/ZhyBrian/SlicerEndoPlanner/releases/tag/ModelWeights).
 
 ---
 
 ## 🖼️ Framework Overview
 
-EndoPlanner is organized as four sequential stages that transform a raw CBCT volume into a manufacturable, patient-specific surgical template assembly.
+The framework described in the paper comprises four stages that transform a CBCT volume into a patient-specific surgical template assembly.
 
 [![EndoPlanner framework overview](overview.png)](overview.png)
 
 | Stage | Description |
 | :--- | :--- |
 | **(a) Total Dental Segmentation** | Multi-label upper and lower dentition segmentation from the CBCT volume using the [`DentalSegmentator`](https://github.com/gaudot/SlicerDentalSegmentator) model, followed by single-tooth region-of-interest cropping. |
-| **(b) Root Canal Landmark Detection** | A multi-task network (pulp segmentation, multi-peak heatmap regression, and root canal number classification) built on a [STU-Net](https://github.com/uni-medical/STU-Net) backbone, followed by a graph-optimization decoder that assembles candidate peaks into a structured set of root canal landmarks, together with a self-supervised inference-time refinement step that improves generalization across diverse morphologies. |
-| **(c) Access Cavity Planning** | A tunable, geometry-guided constrained optimization that computes optimal, minimally invasive drill access points and pulp-cavity entry orientations from the detected landmark topology. |
-| **(d) Surgical Template Generation** | Automatic generation of the two-part template assembly (a metal top sleeve guide and a plastic bottom fixation shell), directly exportable to STL files for 3D printing. |
+| **(b) Root Canal Landmark Detection** | A multi-task network based on [STU-Net](https://github.com/uni-medical/STU-Net) predicts pulp segmentation, landmark heatmaps, and the number of canals. A graph decoder connects candidate landmarks into individual canal paths. The paper further introduces self-supervised inference-time refinement to improve adaptation to different anatomies. |
+| **(c) Access Cavity Planning** | A geometric optimization computes access points and drill orientations from the detected canal paths, with adjustable objectives that balance tissue preservation and access alignment. |
+| **(d) Surgical Template Generation** | A metal sleeve guide and a plastic fixation shell form a two-part assembly that can be exported as STL files for 3D printing. |
 
 ---
 
 ## 🧩 The 3D Slicer Extension
 
-The planning algorithms are integrated into a single, interactive 3D Slicer module with three collapsible sub-components, corresponding to the root canal landmark detection, access cavity planning, and surgical template generation stages of the framework. Each sub-component supports one-click automated output with full 3D visualization.
+The extension provides one interactive module, displayed as **PulpChamberOpenPlanning** under the **Utilities** category in Slicer. Its three processing sections cover landmark detection, access cavity planning, and template generation. Each section produces outputs that can be inspected in the slice views and the 3D view.
 
 [![EndoPlanner inside 3D Slicer](extension_fig.png)](extension_fig.png)
 
-While the workflow is highly automated, essential expert-in-the-loop interactions, such as per-stage hyper-parameter adjustment, are deliberately preserved. This modular design lets dentists oversee and refine the outputs at each processing stage as needed, thereby enhancing the reliability of the planning.
+Users can adjust the decoding and planning parameters. Intermediate results can be inspected and manually corrected before proceeding to the next stage.
+
+The module applies graph decoding to the outputs of the released multi-task network to recover individual canal paths. Access planning then uses this geometry to optimize entry points according to adjustable objective weights.
+
+> [!NOTE]
+> **Release scope and private training data.** To protect patient privacy, we do not publicly release our private clinical training dataset. The inference-time refinement procedure in Section 3.2.3 and Algorithm 1 of the paper retrieves similar training examples and uses their images and landmark annotations for iterative network updates. As this procedure depends on the private dataset, its implementation is not included in this repository. The released module performs landmark detection and the subsequent planning stages without access to the training dataset.
+>
+> The paper's evaluations show that the method retains good average landmark localization accuracy without refinement, with a modest difference in mean error on the evaluated datasets. Refinement remains valuable for reducing large errors and improving predictions in difficult cases. The [comparison below](#-results-at-a-glance) summarizes its effect in the paper's experiments; it is not a benchmark of the released module.
 
 ---
 
 ## ✨ Highlights
 
-- An adaptive and integrated planning framework for root canal therapy, pioneering intelligent preoperative preparation in Guided Endodontics.
-- A bottom-up encoding and graph-based decoding paradigm for root canal landmark localization and topology recognition, compatible with heterogeneous root canal anatomical morphologies.
-- A self-supervised online refinement strategy that iteratively refines initial landmark predictions during inference, enhancing generalization across diverse test distributions.
-- A unified, tunable, and geometry-guided algorithm for automatic access cavity planning, embedded with minimally invasive principles, accommodating complex clinical demands.
-- Multiple clinical cases confirm the efficiency, reliability, and widespread application potential of our proposed framework.
+The main contributions of the paper are:
+
+- An adaptive framework that integrates root canal treatment planning and advances intelligent preoperative preparation in Guided Endodontics.
+- A bottom-up encoding and graph-based decoding paradigm that localizes root canal landmarks and recognizes their topology across heterogeneous canal anatomies.
+- A self-supervised online refinement strategy that iteratively refines initial landmark predictions during inference to improve generalization across different test distributions.
+- A unified algorithm that uses tunable geometric objectives to automate access cavity planning while incorporating minimally invasive principles and accommodating different clinical requirements.
+- In-vitro experiments and five clinical cases provide initial evidence of efficient and reliable planning, supporting the framework's potential for broader clinical application.
 
 ---
 
@@ -68,10 +90,19 @@ While the workflow is highly automated, essential expert-in-the-loop interaction
 | :--- | :---: |
 | Mean Radial Error (landmark localization) | **0.767 mm** |
 | Successful Detection Rate @ 1.0 mm / 2.0 mm | **74.9% / 94.3%** |
-| End-to-end preoperative preparation time | **≈ 4 min** |
+| End-to-end preoperative preparation time | **3 min 56 s on average** |
 | Time reduction versus the conventional workflow | **up to 96.05%** |
 
-Efficacy was further validated through successful in-vitro simulations and clinical cases of template-guided, minimally invasive root canal treatment.
+The landmark results are from subject-level five-fold cross-validation on NPH-LDM, which contains 120 teeth from 33 patients, using the paper's full configuration with inference-time refinement. On the external ToothFairy-LDM dataset of 100 teeth, the refined predictions achieved an MRE of **0.992 mm** and an SDR of **87.4% within 2.0 mm**. The workflow timing includes dental segmentation and manual adjustments. All reported values refer to the paper's experimental evaluation.
+
+The paper also reports the following comparison before and after inference-time refinement (Table 5 and Section 4.3.1):
+
+| Dataset | MRE without refinement | MRE with refinement | SDR within 2.0 mm, without / with refinement |
+| :--- | :---: | :---: | :---: |
+| NPH-LDM | 0.832 mm | 0.767 mm | 92.2% / 94.3% |
+| ToothFairy-LDM | 1.114 mm | 0.992 mm | 84.6% / 87.4% |
+
+The differences in mean error are **0.065 mm** and **0.122 mm**, respectively. The effect on larger errors is more pronounced: on NPH-LDM, the reported maximum-error metric decreased from **5.254 mm** to **3.750 mm** after refinement. These comparisons summarize the effect of refinement under the study's evaluation protocol.
 
 ---
 
@@ -87,59 +118,123 @@ SlicerEndoPlanner/
 ├── extension_fig.png                      # 3D Slicer screenshot
 └── PulpChamberOpenPlanning/               # The scripted module
     ├── CMakeLists.txt
-    ├── PulpChamberOpenPlanning.py         # Core module logic (preview release)
-    ├── ModelWeights/                      # Trained weights, released upon publication
+    ├── PulpChamberOpenPlanning.py         # Module logic and algorithm implementations
+    ├── ModelWeights/                      # Place the downloaded checkpoint here
+    │   └── STU-NET-S-HM-CLS-V2_2026.pth  # Download separately from Releases
     ├── Resources/
     │   ├── Icons/
     │   └── UI/PulpChamberOpenPlanning.ui  # Module user interface
     └── Testing/
 ```
 
+---
+
+## 📥 Model Weights
+
+Download **[STU-NET-S-HM-CLS-V2_2026.pth](https://github.com/ZhyBrian/SlicerEndoPlanner/releases/download/ModelWeights/STU-NET-S-HM-CLS-V2_2026.pth)** from the [ModelWeights release](https://github.com/ZhyBrian/SlicerEndoPlanner/releases/tag/ModelWeights).
+
 > [!IMPORTANT]
-> The `ModelWeights/` directory is intentionally left empty in this preview. The trained weights and the complete algorithmic implementation will be released upon publication.
+> Move the downloaded file into **`PulpChamberOpenPlanning/ModelWeights/`** before running landmark detection. Create the folder if it does not exist, and keep the filename **`STU-NET-S-HM-CLS-V2_2026.pth`** unchanged. The required path, relative to the repository root, is:
+>
+> ```text
+> PulpChamberOpenPlanning/ModelWeights/STU-NET-S-HM-CLS-V2_2026.pth
+> ```
+
+The checkpoint supplies the segmentation, landmark heatmap, and canal-count outputs used by the current module. No separate pulp-segmentation checkpoint is needed for this workflow. Model weights are distributed through Releases and are not included in a Git clone or source archive. Obtain the module code from the repository's `main` branch and download the `.pth` asset separately.
+
+> [!NOTE]
+> **Generalization and manual refinement.** The root canal landmark detection network in stage (b) was trained on a limited dataset and may not generalize well to every CBCT scan. Results can be inspected and manually adjusted at each stage before proceeding to the next step.
+>
+> We welcome further work that builds on the method described in our paper to expand the training data using public resources such as [ToothFairy4](https://ditto.ing.unimore.it/toothfairy4/) or private datasets. With suitable annotations, these data can be used to retrain or fine-tune the network, with the aim of improving robustness on unseen data.
 
 ---
 
 ## 🛠️ Installation
 
-1. **Install [3D Slicer](https://download.slicer.org/)** (version 5.6 or newer is recommended).
-2. **Install the auxiliary extensions** used in the full workflow, via the Slicer *Extensions Manager*:
-   - [`DentalSegmentator`](https://github.com/gaudot/SlicerDentalSegmentator): automated dental segmentation (Stage I).
-   - `Crop Volume`: single-tooth region-of-interest extraction (built-in).
-   - `Easy Clip`: interactive clipping during template design.
-3. **Provide the Python dependencies** in Slicer's Python environment (the full requirements list will accompany the final release):
+1. **Install [3D Slicer](https://download.slicer.org/).** The reference application environment is **Slicer 5.7.0, build 2024-07-15, on 64-bit Windows**, with **Python 3.9.10**. The pinned setup below targets this environment. Landmark detection requires an NVIDIA GPU with a driver compatible with CUDA 12.1. The experiments reported in the paper used Python 3.9.21 and PyTorch 2.6.0; the extension's reference runtime is documented below.
+2. **Prepare the supporting modules.** Install [`DentalSegmentator`](https://github.com/gaudot/SlicerDentalSegmentator) through Slicer's *Extensions Manager*. Complete the NNUNet dependency setup requested by DentalSegmentator before applying the version pins below. `Crop Volume`, used to extract a single tooth, is built into Slicer. `Easy Clip` is optional for additional manual clipping and is also available through the *Extensions Manager*.
+3. **Install the Python dependencies in Slicer's Python environment.** The versions below were inspected in the local application, and the scientific Python imports and key numerical operations were checked with its `PythonSlicer` executable.
+
+   | Package | Local reference version |
+   | :--- | :--- |
+   | PyTorch | `2.3.1+cu121` |
+   | NumPy | `1.26.4` |
+   | SciPy | `1.13.1` |
+   | NiBabel | `5.2.1` |
+   | scikit-image | `0.24.0` |
+   | OR-Tools | `9.3.10497` |
+   | Numba | `0.60.0` |
+   | Matplotlib | `3.9.1` |
+   | SimpleITK | `2.4.0rc2.dev213`, supplied with this Slicer build |
+
+   For a new environment matching the reference Slicer build, run the following in **Slicer's Python Console**. The PyTorch command uses the official [CUDA 12.1 wheel distribution](https://pytorch.org/get-started/previous-versions/#v231). If you already have a working installation, compare its versions with the table before changing packages.
+
    ```python
-   # In the Slicer Python Console
-   slicer.util.pip_install("torch nibabel SimpleITK scikit-image scipy numba ortools matplotlib")
+   import slicer
+
+   slicer.util.pip_install(
+       "torch==2.3.1+cu121 --index-url https://download.pytorch.org/whl/cu121"
+   )
+   slicer.util.pip_install(
+       "numpy==1.26.4 scipy==1.13.1 nibabel==5.2.1 "
+       "scikit-image==0.24.0 ortools==9.3.10497 "
+       "numba==0.60.0 llvmlite==0.43.0 protobuf==5.28.0 "
+       "matplotlib==3.9.2"
+   )
    ```
-4. **Add this module** by cloning the repository and registering the `PulpChamberOpenPlanning/` folder via *Edit → Application Settings → Modules → Additional module paths*, then restart Slicer. The module then appears under the **Endodontics** category as **EndoPlanner**.
+
+   The scikit-image and OR-Tools pins preserve the `skeletonize_3d` and `pywrapgraph` APIs used by the current code. These APIs changed in [scikit-image 0.25](https://scikit-image.org/docs/0.25.x/release_notes/release_0.25.html#api-changes) and [OR-Tools 9.4](https://github.com/google/or-tools/discussions/3425). NumPy and SciPy are pinned to the local versions to keep the numerical stack consistent. The `llvmlite` and `protobuf` pins also match the installed dependencies of Numba and OR-Tools.
+
+   **Matplotlib is the one deliberate difference from the local reference.** Version 3.9.1 was [withdrawn from PyPI because of problems with its Windows wheels](https://pypi.org/project/matplotlib/3.9.1/). New installations use `3.9.2`, which [corrected the Windows runtime bundling](https://matplotlib.org/3.9.2/api/prev_api_changes/api_changes_3.9.2.html#windows-wheel-runtime-bundling-made-static). This installation recommendation is based on the upstream fix; the local checks used the existing `3.9.1` installation.
+
+   Keep the SimpleITK installation supplied with Slicer. Its development version above is recorded for reference and should not be installed separately from PyPI. Slicer also provides its own VTK and Qt bindings, together with the MRML classes and Segment Editor components used by the module. These application components do not need separate pip installation. The remaining standard-library imports are included with Python.
+
+   **Restart Slicer after installing packages**, then check the key imports and CUDA availability in its Python Console:
+
+   ```python
+   import torch
+   from ortools.graph import pywrapgraph
+   from skimage.morphology import skeletonize_3d
+
+   assert torch.cuda.is_available(), "Landmark detection requires a CUDA-capable GPU."
+   print("PyTorch:", torch.__version__, "CUDA:", torch.version.cuda)
+   ```
+
+4. **Clone the repository** into a writable location:
+   ```bash
+   git clone https://github.com/ZhyBrian/SlicerEndoPlanner.git
+   ```
+5. **Download and place the model weights** as described in [Model Weights](#-model-weights).
+6. **Register the module folder** `SlicerEndoPlanner/PulpChamberOpenPlanning/` via *Edit → Application Settings → Modules → Additional module paths*, then restart Slicer. Open **Utilities → PulpChamberOpenPlanning**. The module writes intermediate results and exported templates into `TmpFiles*` subfolders beside its Python file, so this location must remain writable.
 
 ---
 
 ## 🚀 Usage
 
-The module mirrors the four-stage framework, and each stage produces a visualizable result that feeds the next.
+Complete dental segmentation first, then work through the module's three processing sections. Inspect each result and make any necessary manual corrections before using it in the next stage.
 
-**Stage I: Total Dental Segmentation (auxiliary).** Segment the dentition from the CBCT with `DentalSegmentator`, then crop a single-tooth sub-volume with `Crop Volume`.
+**Stage I: Total Dental Segmentation (auxiliary).** Segment the dentition from the CBCT with `DentalSegmentator`, then crop a single-tooth sub-volume with `Crop Volume`. In *General Inputs*, select the cropped tooth as *Input volume*, the original CBCT as *Input super volume*, and the full dental segmentation as *Total dental segmentation*.
 
-**Module 1: Root Canal Landmark Detection.** Select the input volume and an output segmentation node, then click *Apply*. The module predicts the pulp segmentation, the root canal number, and the structured set of landmark curves. The *Advanced* controls expose the decoding parameters, including the candidate count, the heatmap filter threshold, and the direction-coincidence, segmentation-proximity, and heatmap-significance edge-weight coefficients.
+**Module 1: Root Canal Landmark Detection.** Select an output segmentation node and click *Apply*. The module predicts the pulp mask and canal count, then decodes the landmarks into canal curves. Use the *Advanced* controls to adjust candidate selection and the graph decoder when needed. The edge weights balance local canal direction, proximity to the pulp skeleton, and heatmap confidence.
 
-**Module 2: Access Cavity Planning.** Set the crown slice index (and, optionally, the pulp slice index), then click *Apply* to run the constrained optimization and obtain the optimized access cavity points and entry orientations. The *Advanced* controls expose the design preference, the per-objective weights, and the distance trade-off factor ξ that governs how conservative the access cavity is.
+**Module 2: Access Cavity Planning.** Select the pulp segmentation, set the crown slice index and, if needed, the pulp slice index, then click *Apply*. The module optimizes access points and their entry orientations using the detected canal geometry. The *Advanced* controls let you adjust the design preference and objective weights. The distance trade-off factor ξ controls the spacing between access points and the degree of tissue preservation.
 
-**Module 3: Surgical Template Generation.** Run *Stage 1* to generate the bottom fixation shell, define the cover-region ROI, then run *Stage 2* to produce the cropped plastic bottom template and the metal top sleeve guide. Both parts are automatically exported as STL files, ready for 3D printing.
+**Module 3: Surgical Template Generation.** In *Guide Plate Design*, select the upper or lower dentition and an output node for the bottom guide, then run *Stage 1* to generate the fixation shell. Define the cover-region ROI and select the output nodes for both guide parts before running *Stage 2*. This produces the cropped plastic bottom template and the metal top sleeve guide. Both parts are exported as STL files into `PulpChamberOpenPlanning/TmpFilesGPD/` for subsequent fabrication.
 
 ---
 
 ## 📌 Citation
 
-If you find this work useful, please consider citing our paper (the citation will be finalized upon publication):
+If you find this work useful, please cite our [paper in *Medical Image Analysis*](https://doi.org/10.1016/j.media.2026.104294):
 
 ```bibtex
-@article{zhang_endoplanner,
+@article{zhang2026endoplanner,
   title   = {EndoPlanner: An adaptive planning framework for root canal therapy with graph-based endodontic landmark detection and inference-time refinement},
   author  = {Zhang, Yi and Kong, Fangyuan and Wang, Kun and Huang, Zhengwei and Chen, Xiaojun},
-  journal = {Medical Image Analysis (under review)},
-  note    = {Preview code: https://github.com/ZhyBrian/SlicerEndoPlanner}
+  journal = {Medical Image Analysis},
+  year    = {2026},
+  doi     = {10.1016/j.media.2026.104294},
+  url     = {https://doi.org/10.1016/j.media.2026.104294}
 }
 ```
 
@@ -157,7 +252,7 @@ For questions about the method or the extension, please open an [issue](https://
 
 ## 🙏 Acknowledgements
 
-This work builds upon the open-source community, including [3D Slicer](https://www.slicer.org/), [`DentalSegmentator`](https://github.com/gaudot/SlicerDentalSegmentator), and [STU-Net](https://github.com/uni-medical/STU-Net). We thank the Department of Endodontics and Operative Dentistry, Shanghai Ninth People's Hospital, for the clinical collaboration.
+This work builds upon the open-source community, including [3D Slicer](https://www.slicer.org/), [`DentalSegmentator`](https://github.com/gaudot/SlicerDentalSegmentator), and [STU-Net](https://github.com/uni-medical/STU-Net). We thank the Department of Endodontics, Shanghai Ninth People's Hospital, for the clinical collaboration.
 
 ---
 
