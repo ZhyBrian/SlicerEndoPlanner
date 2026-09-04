@@ -254,6 +254,8 @@ For questions about the method or the extension, please open an [issue](https://
 
 This work builds upon the open-source community, including [3D Slicer](https://www.slicer.org/), [`DentalSegmentator`](https://github.com/gaudot/SlicerDentalSegmentator), and [STU-Net](https://github.com/uni-medical/STU-Net). We thank the Department of Endodontics, Shanghai Ninth People's Hospital, for the clinical collaboration.
 
+We also thank the [ToothFairy4](https://ditto.ing.unimore.it/toothfairy4/) team for making CBCT data available to the research community.
+
 ---
 
 ## 📄 License
