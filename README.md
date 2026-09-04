@@ -70,6 +70,8 @@ The module applies graph decoding to the outputs of the released multi-task netw
 >
 > The paper's evaluations show that the method retains good average landmark localization accuracy without refinement, with a modest difference in mean error on the evaluated datasets. Refinement remains valuable for reducing large errors and improving predictions in difficult cases. The [comparison below](#-results-at-a-glance) summarizes its effect in the paper's experiments; it is not a benchmark of the released module.
 
+**Access planning implementation.** The released Slicer module follows the geometric planning principles described in Section 3.3 of the paper, with practical adaptations for interactive use. To simplify parameter configuration within Slicer, it optimizes access points with Adam and encourages containment within the reference region through an adjustable penalty weight, which remains fixed during each optimization run.
+
 ---
 
 ## ✨ Highlights
