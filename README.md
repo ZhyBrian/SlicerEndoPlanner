@@ -230,13 +230,17 @@ Follow the four stages illustrated in Fig. 2 of the paper. Stage I uses supporti
 If you find this work useful, please cite our [paper in *Medical Image Analysis*](https://doi.org/10.1016/j.media.2026.104294):
 
 ```bibtex
-@article{zhang2026endoplanner,
-  title   = {EndoPlanner: An adaptive planning framework for root canal therapy with graph-based endodontic landmark detection and inference-time refinement},
-  author  = {Zhang, Yi and Kong, Fangyuan and Wang, Kun and Huang, Zhengwei and Chen, Xiaojun},
-  journal = {Medical Image Analysis},
-  year    = {2026},
-  doi     = {10.1016/j.media.2026.104294},
-  url     = {https://doi.org/10.1016/j.media.2026.104294}
+@article{zhang2027endoplanner,
+    title = {EndoPlanner: An adaptive planning framework for root canal therapy with graph-based endodontic landmark detection and inference-time refinement},
+    journal = {Medical Image Analysis},
+    volume = {115},
+    pages = {104294},
+    year = {2027},
+    issn = {1361-8415},
+    doi = {https://doi.org/10.1016/j.media.2026.104294},
+    url = {https://www.sciencedirect.com/science/article/pii/S1361841526003634},
+    author = {Yi Zhang and Fangyuan Kong and Kun Wang and Zhengwei Huang and Xiaojun Chen},
+    keywords = {Anatomic landmarks, Computer-assisted therapy, Endodontics, Root canal preparation}
 }
 ```
 
